@@ -15,17 +15,30 @@ Este projeto é um painel financeiro projetado para ajudar famílias a ter uma v
 
 ## ✨ Funcionalidades
 
-* **Visão Geral Detalhada:** Resumo de renda, despesas, dívidas e saldo final.
+* **Visão Geral Detalhada:** Resumo de renda, despesas, dívidas e saldo final em um dashboard protegido.
 * **Gerenciamento de Contas:** Adicione, edite, suspenda e exclua contas recorrentes.
 * **Controle Mensal:** Marque contas como pagas e acompanhe o fluxo de caixa de cada mês.
 * **Metas de Poupança:** Crie e acompanhe o progresso de metas financeiras (ex: uma viagem).
-* **Tela de Login:** Página de autenticação para acesso ao painel.
+* **Autenticação Segura:** Acesso ao painel protegido por um sistema de login.
+* **Middleware de Proteção:** Rotas sensíveis são protegidas, redirecionando usuários não autenticados para a página de login.
 * **Exportação de Dados:** Exporte seus dados financeiros para um arquivo CSV para análise externa.
 * **Design Responsivo:** Acessível em desktops, tablets e dispositivos móveis.
+
+## 🔐 Fluxo de Autenticação
+
+O sistema de autenticação foi implementado para garantir que apenas usuários autorizados possam acessar o painel financeiro.
+
+1. **Ponto de Entrada**: Ao acessar a aplicação, o usuário é direcionado para a página raiz, que verifica o status da autenticação.
+2. **Redirecionamento**:
+    * Se o usuário **estiver autenticado**, ele é redirecionado para o dashboard em `/dashboard`.
+    * Se o usuário **não estiver autenticado**, ele é redirecionado para a página de login em `/login`.
+3. **Middleware**: Um middleware em `middleware.ts` intercepta todas as requisições para rotas protegidas (como `/dashboard`). Se um usuário não autenticado tentar acessar essas rotas diretamente, ele será redirecionado para a página de login.
+4. **Login**: Após um login bem-sucedido, o usuário é redirecionado para o `/dashboard`.
 
 ## 🛠️ Tecnologias Utilizadas
 
 * **Framework:** [Next.js 15](https://nextjs.org/)
+* **Autenticação:** [Supabase](https://supabase.io/)
 * **Linguagem:** [TypeScript](https://www.typescriptlang.org/)
 * **Estilização:** [Tailwind CSS](https://tailwindcss.com/)
 * **Componentes:** [shadcn/ui](https://ui.shadcn.com/), [Lucide React](https://lucide.dev/)
