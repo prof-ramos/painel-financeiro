@@ -65,7 +65,7 @@ O projeto segue uma estrutura padrão do Next.js com algumas adições para comp
     -   `IconComponents.tsx`: Mapeia nomes de ícones para os componentes de ícone reais do `lucide-react`.
 
 -   `/hooks`: Hooks React personalizados para encapsular a lógica de estado.
-    -   `useFinancialData.ts`: **O coração da lógica do lado do cliente.** Ele gerencia o estado de contas, pagamentos, metas e renda. Atualmente, ele usa dados iniciais em memória.
+    -   `useFinancialData.ts`: **O coração da lógica do lado do cliente.** Ele gerencia o estado de contas, pagamentos, metas e renda. Atualmente, ele usa dados iniciais em memória, o que significa que o estado é reiniciado a cada recarga da página.
 
 -   `/utils`: Funções utilitárias.
     -   `financial.ts`: Funções auxiliares para formatação de moeda, datas e exportação para CSV. Também contém constantes como `META_CHILE`.
@@ -109,14 +109,23 @@ O estado da aplicação é centralizado no hook personalizado `useFinancialData.
 O `package.json` inclui um script `test`, mas o projeto atualmente não possui uma estrutura de teste configurada ou arquivos de teste. A estratégia de teste recomendada é a seguinte:
 
 -   **Testes Unitários:** Use **Jest** e **React Testing Library** para testar componentes individuais e funções utilitárias.
-    -   *Exemplo:* Teste se `formatCurrency` em `utils/financial.ts` formata os números corretamente.
-    -   *Exemplo:* Teste se o componente `ContaCard` renderiza as informações corretas com base nas props recebidas.
+    -   **O que testar:** Funções puras em `utils/financial.ts`, componentes de UI isolados como `ContaCard.tsx`.
+    -   **Exemplo (`utils/financial.ts`):** Crie um arquivo `utils/financial.test.ts` e escreva casos de teste para `formatCurrency`, garantindo que ele lida com números inteiros, decimais e zero corretamente.
+    -   **Exemplo (`ContaCard.tsx`):** Renderize o componente com props de uma conta `ativa` e `suspensa` e verifique se a opacidade e o texto do status são renderizados corretamente. Simule cliques nos botões e verifique se as funções de callback (`onEdit`, `onDelete`) são chamadas.
 
 -   **Testes de Integração:** Teste como vários componentes interagem.
-    -   *Exemplo:* Simule um clique no botão "Adicionar Conta", preencha o formulário no modal e verifique se a função `addConta` é chamada com os dados corretos.
+    -   **O que testar:** Fluxos que envolvem múltiplos componentes, como o formulário de adição de conta.
+    -   **Exemplo:** Renderize o componente `FamilyFinancialDashboard` (`app/page.tsx`), simule um clique no botão "Adicionar Conta", preencha os campos do formulário no modal e clique em "Adicionar". Verifique se a nova conta aparece na lista.
 
 -   **Testes End-to-End (E2E):** Use **Cypress** ou **Playwright** para testar fluxos de usuário completos.
-    -   *Exemplo:* Crie um teste que navega até a guia "Controle Mensal", marca uma conta como paga e verifica se os totais são atualizados corretamente.
+    -   **O que testar:** Caminhos críticos do usuário do início ao fim.
+    -   **Exemplo:** Crie um teste que:
+        1.  Abre a página.
+        2.  Navega para a guia "Controle Mensal".
+        3.  Seleciona um mês e ano.
+        4.  Marca uma conta como paga.
+        5.  Verifica se os totais de "Contas Pagas" e "Total Pago" são atualizados corretamente.
+        6.  Navega para a guia "Exportar Dados" e clica no botão de download.
 
 ## 5. Solução de Problemas Comuns
 
@@ -130,8 +139,8 @@ O `package.json` inclui um script `test`, mas o projeto atualmente não possui u
 
 3.  **Dados Não Atualizam na Tela:**
     -   **Sintoma:** Você interage com a UI, mas os dados exibidos não mudam.
-    -   **Solução:** Lembre-se de que o estado é gerenciado em `hooks/useFinancialData.ts` e é **mantido em memória**, o que significa que será redefinido ao recarregar a página. Certifique-se de que você está usando as funções de atualização de estado (ex: `addConta`, `togglePagamento`) em vez de tentar mutar o estado diretamente. Use as Ferramentas de Desenvolvedor do React para inspecionar o estado do componente.
+    -   **Solução:** Lembre-se de que o estado é gerenciado em `hooks/useFinancialData.ts` e é **mantido em memória**, o que significa que será redefinido ao recarregar a página. Certifique-se de que você está usando as funções de atualização de estado (ex: `addConta`, `togglePagamento`) em vez de tentar mutar o estado diretamente. Use as Ferramentas de Desenvolvedor do React para inspecionar o estado do componente e verificar se ele está sendo atualizado como esperado.
 
 4.  **Erros de Tipo (TypeScript):**
     -   **Sintoma:** O editor de código ou o processo de build acusa erros de tipo.
-    -   **Solução:** Verifique as definições de tipo em `types/financial.ts` e garanta que os dados que você está passando entre componentes e funções correspondem a essas definições. O `next.config.mjs` está configurado para ignorar erros de build (`ignoreBuildErrors: true`), mas é uma boa prática corrigi-los durante o desenvolvimento.
+    -   **Solução:** Verifique as definições de tipo em `types/financial.ts` e garanta que os dados que você está passando entre componentes e funções correspondem a essas definições. O `next.config.mjs` está configurado com `typescript: { ignoreBuildErrors: true }`, o que pode mascarar problemas. É uma boa prática corrigir esses erros durante o desenvolvimento para garantir a robustez do código.
