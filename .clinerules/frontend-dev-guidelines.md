@@ -17,7 +17,7 @@
 - Prefix event handlers with "handle" (e.g. handleSubmit, handleClick)
 - Use descriptive prop names with TypeScript interfaces
 - Implement accessibility features:
-  - Add `tabIndex={0}` to interactive elements
+  - Only use `tabIndex={0}` on elements that are not naturally focusable. Prioritize semantic HTML elements like `<button>` and `<a>` for interactive controls before resorting to `tabIndex` to avoid keyboard navigation noise.
   - Include ARIA labels for screen readers
   - Support keyboard navigation with onKeyDown handlers
 

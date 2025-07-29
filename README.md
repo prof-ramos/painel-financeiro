@@ -19,6 +19,7 @@ Este projeto é um painel financeiro projetado para ajudar famílias a ter uma v
 * **Gerenciamento de Contas:** Adicione, edite, suspenda e exclua contas recorrentes.
 * **Controle Mensal:** Marque contas como pagas e acompanhe o fluxo de caixa de cada mês.
 * **Metas de Poupança:** Crie e acompanhe o progresso de metas financeiras (ex: uma viagem).
+* **Tela de Login:** Página de autenticação para acesso ao painel.
 * **Exportação de Dados:** Exporte seus dados financeiros para um arquivo CSV para análise externa.
 * **Design Responsivo:** Acessível em desktops, tablets e dispositivos móveis.
 
