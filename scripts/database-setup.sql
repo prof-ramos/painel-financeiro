@@ -535,6 +535,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Utility function to reset a user's password
+CREATE OR REPLACE FUNCTION reset_user_password(
+    p_username VARCHAR,
+    p_new_password VARCHAR
+) RETURNS VOID AS $$
+BEGIN
+    UPDATE users
+    SET password_hash = crypt(p_new_password, gen_salt('bf')),
+        updated_at = NOW()
+    WHERE username = p_username;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'User % not found', p_username;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Final message
 DO $$
 BEGIN
