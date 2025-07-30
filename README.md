@@ -76,6 +76,24 @@ Siga as instruções abaixo para configurar e executar o projeto em seu ambiente
 
 4. Abra <http://localhost:3000> em seu navegador para ver a aplicação.
 
+### Credenciais Padrão
+
+Um usuário administrador inicial é criado pelo script `database-setup.sql`.
+Utilize as credenciais abaixo para o primeiro acesso:
+
+```
+Usuário: admin
+Senha: admin123!
+```
+
+Após o login, altere a senha imediatamente. Caso seja necessário redefinir a senha de qualquer usuário, execute:
+
+```bash
+psql -d v0_tactical_db -c "SELECT reset_user_password('admin', 'novaSenha');"
+```
+
+O comando acima usa a função `reset_user_password` adicionada ao banco de dados para atualizar o hash da senha.
+
 ## 🚀 Deploy na Vercel
 
 Para fazer o deploy deste projeto na Vercel, siga os passos abaixo:
