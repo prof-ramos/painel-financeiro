@@ -101,6 +101,21 @@ Para fazer o deploy deste projeto na Vercel, siga os passos abaixo:
    * Clique no botão "Deploy". A Vercel irá construir e implantar sua aplicação.
    * Após a conclusão, você receberá uma URL pública para o seu projeto.
 
+## 🛰️ Deploy com Docker Compose
+
+Para manter os dados persistentes, utilize o `docker-compose.yml` incluído neste projeto.
+
+1. Copie `.env.example` para `.env` e defina `POSTGRES_PASSWORD`.
+2. Construa e inicie os serviços:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+3. O volume `postgres-data` garante que o banco de dados PostgreSQL não seja perdido entre atualizações.
+
+<!-- @coderabbitai resolve -->
+
 ## 📜 Scripts Disponíveis
 
 No diretório do projeto, você pode executar:
