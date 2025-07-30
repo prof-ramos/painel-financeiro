@@ -5,27 +5,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from 'next/navigation';
 import { useState } from "react";
 
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
-  const router = useRouter();
 
-  const handleSignIn = async () => {
+  const handleResetPassword = async () => {
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    setMessage(null);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${location.origin}/login/update-password`,
     });
 
     if (error) {
       setError(error.message);
     } else {
-      router.push('/dashboard');
+      setMessage("Password reset link sent. Please check your email.");
     }
   };
 
@@ -33,9 +32,9 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-950">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
+          <CardTitle className="text-2xl">Reset Password</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account.
+            Enter your email to receive a password reset link.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -50,25 +49,11 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
+          {message && <p className="text-green-500 text-sm">{message}</p>}
           {error && <p className="text-red-500 text-sm">{error}</p>}
-          <Button className="w-full" onClick={handleSignIn}>
-            Sign in
+          <Button className="w-full" onClick={handleResetPassword}>
+            Send Reset Link
           </Button>
-          <div className="text-center text-sm">
-            <a href="/login/reset-password">
-              Forgot your password?
-            </a>
-          </div>
         </CardContent>
       </Card>
     </div>
