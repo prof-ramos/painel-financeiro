@@ -23,6 +23,7 @@ Este projeto é um painel financeiro projetado para ajudar famílias a ter uma v
 * **Middleware de Proteção:** Rotas sensíveis são protegidas, redirecionando usuários não autenticados para a página de login.
 * **Exportação de Dados:** Exporte seus dados financeiros para um arquivo CSV para análise externa.
 * **Design Responsivo:** Acessível em desktops, tablets e dispositivos móveis.
+* **Sistema de Reset de Senha:** Funcionalidade completa para redefinir senhas esquecidas.
 
 ## 🔐 Fluxo de Autenticação
 
@@ -34,6 +35,16 @@ O sistema de autenticação foi implementado para garantir que apenas usuários 
     * Se o usuário **não estiver autenticado**, ele é redirecionado para a página de login em `/login`.
 3. **Middleware**: Um middleware em `middleware.ts` intercepta todas as requisições para rotas protegidas (como `/dashboard`). Se um usuário não autenticado tentar acessar essas rotas diretamente, ele será redirecionado para a página de login.
 4. **Login**: Após um login bem-sucedido, o usuário é redirecionado para o `/dashboard`.
+5. **Reset de Senha**: Usuários podem redefinir suas senhas através do fluxo "Esqueci minha senha".
+
+### 🎯 Melhorias Recentes na UX de Login
+
+* **Conversão automática de username**: Digite apenas "admin" e o sistema converte automaticamente para "admin@example.com"
+* **Validação inteligente**: Feedback em tempo real para validação de email
+* **Dicas visuais**: Ajuda contextual quando o usuário digita credenciais incompletas
+* **Indicador de força de senha**: Validação em tempo real da força da nova senha
+* **Navegação por teclado**: Suporte completo a navegação por Enter
+* **Estados de loading**: Indicadores visuais durante operações de autenticação
 
 ## 🛠️ Tecnologias Utilizadas
 
