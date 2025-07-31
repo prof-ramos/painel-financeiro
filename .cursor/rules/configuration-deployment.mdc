@@ -1,0 +1,385 @@
+# Configuration and Deployment Patterns
+
+## Build Configuration
+
+### Next.js Configuration
+The project uses [next.config.mjs](mdc:next.config.mjs) with the following settings:
+
+```javascript
+const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true, // Disable ESLint during builds
+  },
+  typescript: {
+    ignoreBuildErrors: true, // Disable TypeScript errors during builds
+  },
+  images: {
+    unoptimized: true, // Disable Next.js image optimization
+  },
+  allowedDevOrigins: ["http://10.0.0.10:3000"], // Allow specific dev origins
+}
+```
+
+### TypeScript Configuration
+[tsconfig.json](mdc:tsconfig.json) includes:
+- Strict mode enabled
+- Path mapping for `@/*` to root directory
+- Next.js plugin integration
+- ES6 target with modern module resolution
+
+### Tailwind Configuration
+[tailwind.config.ts](mdc:tailwind.config.ts) defines:
+- Custom color system with CSS variables
+- Dark mode support
+- Custom animations and keyframes
+- Content paths for all component files
+
+## Package Management
+
+### Dependencies
+The project uses pnpm as the package manager with the following key dependencies:
+
+#### Core Dependencies
+```json
+{
+  "next": "15.2.4",
+  "react": "^19",
+  "react-dom": "^19",
+  "typescript": "^5"
+}
+```
+
+#### UI Dependencies
+```json
+{
+  "@radix-ui/react-*": "latest", // shadcn/ui components
+  "lucide-react": "^0.454.0",    // Icons
+  "tailwindcss": "^3.4.17",      // Styling
+  "class-variance-authority": "^0.7.1"
+}
+```
+
+#### Form and Validation
+```json
+{
+  "react-hook-form": "latest",
+  "@hookform/resolvers": "^3.9.1",
+  "zod": "^3.24.1"
+}
+```
+
+### Scripts
+[package.json](mdc:package.json) includes these scripts:
+```json
+{
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "next lint",
+  "backup": "chmod +x scripts/backup.sh && ./scripts/backup.sh"
+}
+```
+
+## Environment Configuration
+
+### Environment Variables
+Required environment variables for different environments:
+
+#### Development (.env.local)
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Optional: Database scripts
+DATABASE_PASSWORD=your_database_password
+BACKUP_ENCRYPTION_KEY=your_encryption_key
+SLACK_WEBHOOK_URL=your_slack_webhook
+BACKUP_S3_BUCKET=your_s3_bucket
+BACKUP_S3_REGION=your_s3_region
+AWS_ACCESS_KEY_ID=your_aws_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret
+```
+
+#### Production (Vercel)
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_supabase_key
+NODE_ENV=production
+```
+
+### Environment-Specific Configurations
+
+#### Development
+- Hot reloading enabled
+- TypeScript errors ignored during build
+- ESLint errors ignored during build
+- Unoptimized images for faster builds
+
+#### Production
+- Full TypeScript checking
+- ESLint enforcement
+- Image optimization enabled
+- Performance optimizations
+
+## Docker Configuration
+
+### Dockerfile
+[Dockerfile](mdc:Dockerfile) uses multi-stage build:
+```dockerfile
+# Build stage
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable && corepack prepare pnpm@8.6.2 --activate && pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm run build
+
+# Production stage
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app .
+EXPOSE 3000
+CMD ["pnpm","start"]
+```
+
+### Docker Compose
+[docker-compose.yml](mdc:docker-compose.yml) includes:
+```yaml
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      DATABASE_URL: postgres://postgres:postgres@db:5432/painel
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: painel
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+```
+
+## Deployment Strategies
+
+### Vercel Deployment (Recommended)
+
+#### Setup Process
+1. Connect GitHub repository to Vercel
+2. Configure build settings:
+   - Framework Preset: Next.js
+   - Build Command: `pnpm build`
+   - Output Directory: `.next`
+   - Install Command: `pnpm install`
+
+#### Environment Variables
+Set in Vercel dashboard:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NODE_ENV=production`
+
+#### Automatic Deployments
+- Deploy on push to main branch
+- Preview deployments for pull requests
+- Automatic rollback on build failures
+
+### Docker Deployment
+
+#### Local Docker Build
+```bash
+# Build image
+docker build -t painel-financeiro .
+
+# Run container
+docker run -p 3000:3000 -e NEXT_PUBLIC_SUPABASE_URL=your_url painel-financeiro
+```
+
+#### Docker Compose Deployment
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f app
+
+# Stop services
+docker-compose down
+```
+
+### PM2 Deployment (Production Server)
+
+#### PM2 Configuration
+[ecosystem.config.js](mdc:ecosystem.config.js) includes:
+- Multi-instance clustering
+- Memory and CPU management
+- Logging configuration
+- Health monitoring
+- Auto-restart policies
+
+#### Deployment Commands
+```bash
+# Start application
+pm2 start ecosystem.config.js --env production
+
+# Monitor processes
+pm2 monit
+
+# View logs
+pm2 logs v0-project
+
+# Restart application
+pm2 restart v0-project
+```
+
+## Build Optimization
+
+### Bundle Analysis
+```bash
+# Install bundle analyzer
+pnpm add -D @next/bundle-analyzer
+
+# Analyze bundle
+ANALYZE=true pnpm build
+```
+
+### Performance Optimizations
+
+#### Code Splitting
+```typescript
+// Dynamic imports for large components
+const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+  loading: () => <div>Loading...</div>,
+  ssr: false
+})
+```
+
+#### Image Optimization
+```typescript
+// Use Next.js Image component
+import Image from 'next/image'
+
+<Image
+  src="/placeholder-logo.png"
+  alt="Logo"
+  width={200}
+  height={100}
+  priority
+/>
+```
+
+#### Font Optimization
+```typescript
+// Optimize fonts in layout
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
+```
+
+## Monitoring and Logging
+
+### Application Monitoring
+- Vercel Analytics (built-in)
+- Performance monitoring
+- Error tracking
+- User behavior analytics
+
+### Logging Configuration
+```typescript
+// Custom logging utility
+export const logger = {
+  info: (message: string, data?: any) => {
+    console.log(`[INFO] ${message}`, data)
+  },
+  error: (message: string, error?: any) => {
+    console.error(`[ERROR] ${message}`, error)
+  },
+  warn: (message: string, data?: any) => {
+    console.warn(`[WARN] ${message}`, data)
+  }
+}
+```
+
+### Health Checks
+```typescript
+// Health check endpoint
+export async function GET() {
+  try {
+    // Check database connection
+    // Check external services
+    return Response.json({ status: 'healthy' })
+  } catch (error) {
+    return Response.json({ status: 'unhealthy', error: error.message }, { status: 500 })
+  }
+}
+```
+
+## Security Configuration
+
+### Authentication Middleware
+[middleware.ts](mdc:middleware.ts) provides:
+- Route protection
+- Authentication verification
+- Automatic redirects
+- Session management
+
+### Environment Security
+- Environment variables for sensitive data
+- No hardcoded secrets
+- Secure cookie handling
+- HTTPS enforcement in production
+
+### Content Security Policy
+```typescript
+// Add CSP headers
+const cspHeader = `
+  default-src 'self';
+  script-src 'self' 'unsafe-eval' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' blob: data:;
+  font-src 'self';
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  frame-ancestors 'none';
+  block-all-mixed-content;
+  upgrade-insecure-requests;
+`
+```
+
+## Backup and Recovery
+
+### Database Backup Scripts
+[scripts/backup.sh](mdc:scripts/backup.sh) provides:
+- Automated database backups
+- Encryption of backup files
+- S3 upload capability
+- Slack notifications
+
+### Backup Configuration
+```bash
+# Manual backup
+pnpm run backup
+
+# Verify backup
+pnpm run backup:verify
+```
+
+### Recovery Process
+[scripts/restore.sh](mdc:scripts/restore.sh) includes:
+- Backup verification
+- Database restoration
+- Data integrity checks
+- Rollback procedures
+description:
+globs:
+alwaysApply: false
+---
