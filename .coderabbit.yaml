@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - main
+      - develop
+
+checks:
+  - lint
+  - test
+  - build
+
+review:
+  enabled: true
+  summary: true
+  suggestions: true
+  labels:
+    - codex
+    - enhancement 
