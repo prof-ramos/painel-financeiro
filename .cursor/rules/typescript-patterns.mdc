@@ -1,0 +1,76 @@
+# TypeScript Patterns for Financial Dashboard
+
+## Type Safety Requirements
+
+- **Strict Typing**: All components, functions, and variables must be properly typed
+- **Interface Usage**: Use interfaces from [types/financial.ts](mdc:types/financial.ts) for financial data
+- **Type Imports**: Import types using `import type { ... }` syntax
+
+## Financial Data Types
+
+Always use the predefined interfaces:
+
+```typescript
+import type { Conta, Pagamento, DepositoMeta, Renda, FinancialSummary } from "@/types/financial"
+```
+
+### Key Interfaces:
+- `Conta`: Account information with id, nome, valor, categoria, dataVencimento, status, icone
+- `Pagamento`: Payment tracking with contaId, mes, ano, pago, dataPagamento
+- `DepositoMeta`: Savings deposit with id, valor, data, descricao
+- `Renda`: Income with salarioLiquido
+- `FinancialSummary`: Calculated financial totals
+- `ViewType`: Navigation view types ("overview" | "manage" | "monthly" | "chile" | "export")
+
+## Component Patterns
+
+### Function Components
+```typescript
+interface ComponentProps {
+  // Define props interface
+}
+
+export function ComponentName({ prop1, prop2 }: ComponentProps) {
+  // Component logic
+}
+```
+
+### Hook Usage
+```typescript
+const { contas, addConta, togglePagamento } = useFinancialData()
+```
+
+## State Management
+
+- All state changes must go through [hooks/useFinancialData.ts](mdc:hooks/useFinancialData.ts)
+- Use `useMemo` for expensive calculations
+- Use `useState` for local component state only
+
+## Error Handling
+
+- Use optional chaining (`?.`) for potentially undefined values
+- Use nullish coalescing (`??`) for default values
+- Type guard functions for runtime type checking
+
+## Import Patterns
+
+```typescript
+// React imports
+import { useState, useEffect, useMemo } from "react"
+
+// Type imports
+import type { Conta } from "@/types/financial"
+
+// Component imports
+import { Button } from "@/components/ui/button"
+
+// Hook imports
+import { useFinancialData } from "@/hooks/useFinancialData"
+
+// Utility imports
+import { formatCurrency } from "@/utils/financial"
+```
+description:
+globs:
+alwaysApply: false
+---

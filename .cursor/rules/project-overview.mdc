@@ -1,0 +1,46 @@
+# Painel Financeiro Familiar - Project Overview
+
+This is a modern family financial dashboard built with Next.js 15, TypeScript, and Tailwind CSS. The project follows a client-side architecture with in-memory data management for rapid prototyping.
+
+## Project Structure
+
+- **Main Entry**: [app/page.tsx](mdc:app/page.tsx) - FamilyFinancialDashboard component
+- **Layout**: [app/layout.tsx](mdc:app/layout.tsx) - Root layout with theme provider
+- **Authentication**: [middleware.ts](mdc:middleware.ts) - Supabase auth middleware
+- **State Management**: [hooks/useFinancialData.ts](mdc:hooks/useFinancialData.ts) - Centralized financial data hook
+- **Types**: [types/financial.ts](mdc:types/financial.ts) - TypeScript interfaces
+- **Components**: [components/](mdc:components/) - Reusable UI components
+- **Configuration**: [next.config.mjs](mdc:next.config.mjs), [tailwind.config.ts](mdc:tailwind.config.ts)
+
+## Key Technologies
+
+- **Framework**: Next.js 15 with App Router
+- **Language**: TypeScript 5+
+- **Styling**: Tailwind CSS + shadcn/ui components
+- **Authentication**: Supabase
+- **Icons**: Lucide React
+- **State**: React Hooks (useState, useEffect, useMemo)
+- **Package Manager**: pnpm
+
+## Architecture Pattern
+
+The project uses a **client-side simplified architecture** where all business logic resides in the frontend using in-memory data. This allows for rapid prototyping and demonstrations without backend complexity.
+
+## Data Flow
+
+1. **State Management**: All financial data is managed in [hooks/useFinancialData.ts](mdc:hooks/useFinancialData.ts)
+2. **Component Structure**: Main dashboard in [app/page.tsx](mdc:app/page.tsx) with navigation tabs
+3. **Data Types**: Defined in [types/financial.ts](mdc:types/financial.ts)
+4. **UI Components**: Reusable components in [components/](mdc:components/) directory
+
+## Development Guidelines
+
+- Follow the patterns established in [DEVELOPER_GUIDE.md](mdc:DEVELOPER_GUIDE.md)
+- Use TypeScript strictly - all components should be typed
+- Follow the shadcn/ui component patterns
+- State changes must go through the useFinancialData hook
+- Data is in-memory only (resets on page reload)
+description:
+globs:
+alwaysApply: false
+---

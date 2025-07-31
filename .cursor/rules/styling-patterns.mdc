@@ -1,0 +1,356 @@
+# Styling Patterns for Financial Dashboard
+
+## Design System
+
+The project uses a **design system** based on shadcn/ui with custom CSS variables defined in [tailwind.config.ts](mdc:tailwind.config.ts) and [app/globals.css](mdc:app/globals.css).
+
+## CSS Variables Structure
+
+### Color System
+```css
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+  --radius: 0.5rem;
+}
+```
+
+### Dark Mode Variables
+```css
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 210 40% 98%;
+  --primary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+}
+```
+
+## Tailwind CSS Usage
+
+### Semantic Color Classes
+```css
+/* Background colors */
+.bg-background    /* Main background */
+.bg-card          /* Card backgrounds */
+.bg-popover       /* Popover/dropdown backgrounds */
+.bg-primary       /* Primary action backgrounds */
+.bg-secondary     /* Secondary action backgrounds */
+.bg-muted         /* Muted/subsidiary backgrounds */
+.bg-accent        /* Accent backgrounds */
+.bg-destructive   /* Error/danger backgrounds */
+
+/* Text colors */
+.text-foreground  /* Primary text */
+.text-card-foreground    /* Text on cards */
+.text-popover-foreground /* Text on popovers */
+.text-primary     /* Primary text */
+.text-secondary   /* Secondary text */
+.text-muted       /* Muted text */
+.text-accent      /* Accent text */
+.text-destructive /* Error text */
+
+/* Border colors */
+.border-border    /* Default borders */
+.border-input     /* Input borders */
+.border-ring      /* Focus rings */
+```
+
+### Spacing System
+```css
+/* Consistent spacing using Tailwind's spacing scale */
+.p-1  /* 0.25rem - 4px */
+.p-2  /* 0.5rem - 8px */
+.p-3  /* 0.75rem - 12px */
+.p-4  /* 1rem - 16px */
+.p-5  /* 1.25rem - 20px */
+.p-6  /* 1.5rem - 24px */
+.p-8  /* 2rem - 32px */
+.p-10 /* 2.5rem - 40px */
+.p-12 /* 3rem - 48px */
+```
+
+### Typography Scale
+```css
+/* Text sizes */
+.text-xs    /* 0.75rem - 12px */
+.text-sm    /* 0.875rem - 14px */
+.text-base  /* 1rem - 16px */
+.text-lg    /* 1.125rem - 18px */
+.text-xl    /* 1.25rem - 20px */
+.text-2xl   /* 1.5rem - 24px */
+.text-3xl   /* 1.875rem - 30px */
+.text-4xl   /* 2.25rem - 36px */
+
+/* Font weights */
+.font-light    /* 300 */
+.font-normal   /* 400 */
+.font-medium   /* 500 */
+.font-semibold /* 600 */
+.font-bold     /* 700 */
+```
+
+## Component-Specific Styling
+
+### Card Components
+```css
+/* Card base styles */
+.card {
+  @apply bg-card text-card-foreground rounded-lg border shadow-sm;
+}
+
+.card-header {
+  @apply flex flex-col space-y-1.5 p-6;
+}
+
+.card-content {
+  @apply p-6 pt-0;
+}
+
+.card-footer {
+  @apply flex items-center p-6 pt-0;
+}
+```
+
+### Button Variants
+```css
+/* Button base */
+.btn {
+  @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background;
+}
+
+/* Button variants */
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+}
+
+.btn-destructive {
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+}
+
+.btn-outline {
+  @apply border border-input hover:bg-accent hover:text-accent-foreground;
+}
+
+.btn-ghost {
+  @apply hover:bg-accent hover:text-accent-foreground;
+}
+```
+
+### Form Elements
+```css
+/* Input styles */
+.input {
+  @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+/* Label styles */
+.label {
+  @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
+}
+```
+
+## Responsive Design Patterns
+
+### Mobile-First Approach
+```css
+/* Base styles (mobile) */
+.container {
+  @apply px-4 py-6;
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  .container {
+    @apply px-6 py-8;
+  }
+}
+
+/* Desktop and up */
+@media (min-width: 1024px) {
+  .container {
+    @apply px-8 py-10;
+  }
+}
+```
+
+### Grid Layouts
+```css
+/* Responsive grid */
+.grid-responsive {
+  @apply grid grid-cols-1 gap-4;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    @apply grid-cols-2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    @apply grid-cols-3;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid-responsive {
+    @apply grid-cols-4;
+  }
+}
+```
+
+## Animation and Transitions
+
+### Smooth Transitions
+```css
+/* Default transition */
+.transition-default {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Fast transition */
+.transition-fast {
+  @apply transition-all duration-150 ease-in-out;
+}
+
+/* Slow transition */
+.transition-slow {
+  @apply transition-all duration-300 ease-in-out;
+}
+```
+
+### Hover Effects
+```css
+/* Card hover */
+.card-hover {
+  @apply transition-shadow duration-200 hover:shadow-md;
+}
+
+/* Button hover */
+.btn-hover {
+  @apply transition-colors duration-200 hover:scale-105;
+}
+```
+
+## Financial-Specific Styling
+
+### Status Indicators
+```css
+/* Account status */
+.status-ativo {
+  @apply bg-green-100 text-green-800 border-green-200;
+}
+
+.status-suspenso {
+  @apply bg-gray-100 text-gray-800 border-gray-200 opacity-50;
+}
+
+/* Payment status */
+.payment-paid {
+  @apply bg-green-500 text-white;
+}
+
+.payment-unpaid {
+  @apply bg-red-500 text-white;
+}
+```
+
+### Financial Cards
+```css
+/* Financial summary cards */
+.financial-card {
+  @apply bg-card border rounded-lg p-4 shadow-sm;
+}
+
+.financial-card-positive {
+  @apply border-green-200 bg-green-50;
+}
+
+.financial-card-negative {
+  @apply border-red-200 bg-red-50;
+}
+
+.financial-card-neutral {
+  @apply border-gray-200 bg-gray-50;
+}
+```
+
+## Utility Classes
+
+### Layout Utilities
+```css
+/* Flex utilities */
+.flex-center {
+  @apply flex items-center justify-center;
+}
+
+.flex-between {
+  @apply flex items-center justify-between;
+}
+
+.flex-col-center {
+  @apply flex flex-col items-center justify-center;
+}
+
+/* Spacing utilities */
+.space-y-4 > * + * {
+  @apply mt-4;
+}
+
+.space-x-4 > * + * {
+  @apply ml-4;
+}
+```
+
+### Text Utilities
+```css
+/* Text truncation */
+.text-truncate {
+  @apply overflow-hidden text-ellipsis whitespace-nowrap;
+}
+
+/* Text balance */
+.text-balance {
+  text-wrap: balance;
+}
+```
+description:
+globs:
+alwaysApply: false
+---
