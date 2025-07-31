@@ -1,0 +1,392 @@
+# API Documentation - Painel Financeiro Familiar
+
+## Visão Geral da API
+
+O Painel Financeiro Familiar utiliza uma arquitetura cliente-servidor com:
+- **Frontend**: Next.js 15 com App Router
+- **Backend**: Supabase (PostgreSQL + Auth + Real-time)
+- **Autenticação**: Supabase Auth com middleware de proteção
+- **Estado**: React Hooks com dados em memória (prototipagem)
+
+## Estrutura de Dados
+
+### Tipos Principais
+
+#### Conta (Account)
+```typescript
+interface Conta {
+  id: string                    // Identificador único
+  nome: string                  // Nome da conta
+  valor: number                 // Valor em reais
+  categoria: "necessidade" | "desejo" | "divida"
+  dataVencimento: number        // Dia do mês (1-31)
+  status: "ativo" | "suspenso"
+  icone: IconType              // Ícone para exibição
+}
+```
+
+#### Pagamento (Payment)
+```typescript
+interface Pagamento {
+  contaId: string              // Referência à conta
+  mes: number                  // Mês (0-11)
+  ano: number                  // Ano (YYYY)
+  pago: boolean                // Status do pagamento
+  dataPagamento?: string       // Data do pagamento (ISO)
+}
+```
+
+#### DepositoMeta (Goal Deposit)
+```typescript
+interface DepositoMeta {
+  id: string                   // Identificador único
+  valor: number                // Valor depositado
+  data: string                 // Data do depósito (ISO)
+  descricao?: string           // Descrição opcional
+}
+```
+
+#### FinancialSummary
+```typescript
+interface FinancialSummary {
+  totalNecessidades: number    // Total de necessidades
+  totalDesejos: number         // Total de desejos
+  totalDividas: number         // Total de dívidas
+  totalDespesas: number        // Total de despesas
+  saldoAposDespesas: number    // Saldo após despesas
+  saldoFinal: number           // Saldo final
+}
+```
+
+## Endpoints Internos (Hooks API)
+
+### useFinancialData Hook
+
+#### Endpoint: `hooks/useFinancialData.ts`
+
+**Descrição**: Hook principal para gerenciamento de dados financeiros
+
+**Métodos Disponíveis**:
+
+##### 1. Gerenciamento de Contas
+
+**POST** `/addConta`
+```typescript
+addConta(novaConta: Omit<Conta, "id">): void
+```
+- **Descrição**: Adiciona uma nova conta
+- **Parâmetros**:
+  - `novaConta`: Dados da conta (sem ID)
+- **Resposta**: `void`
+- **Exemplo**:
+```typescript
+addConta({
+  nome: "Aluguel",
+  valor: 1500,
+  categoria: "necessidade",
+  dataVencimento: 10,
+  status: "ativo",
+  icone: "Home"
+})
+```
+
+**PUT** `/updateConta`
+```typescript
+updateConta(id: string, updatedConta: Partial<Conta>): void
+```
+- **Descrição**: Atualiza uma conta existente
+- **Parâmetros**:
+  - `id`: ID da conta
+  - `updatedConta`: Dados parciais para atualização
+- **Resposta**: `void`
+
+**DELETE** `/deleteConta`
+```typescript
+deleteConta(id: string): void
+```
+- **Descrição**: Remove uma conta
+- **Parâmetros**:
+  - `id`: ID da conta
+- **Resposta**: `void`
+
+**PATCH** `/toggleContaStatus`
+```typescript
+toggleContaStatus(id: string): void
+```
+- **Descrição**: Alterna status ativo/suspenso
+- **Parâmetros**:
+  - `id`: ID da conta
+- **Resposta**: `void`
+
+##### 2. Gerenciamento de Pagamentos
+
+**POST** `/togglePagamento`
+```typescript
+togglePagamento(contaId: string, mes: number, ano: number): void
+```
+- **Descrição**: Marca/desmarca pagamento de uma conta
+- **Parâmetros**:
+  - `contaId`: ID da conta
+  - `mes`: Mês (0-11)
+  - `ano`: Ano (YYYY)
+- **Resposta**: `void`
+
+**GET** `/isPago`
+```typescript
+isPago(contaId: string, mes: number, ano: number): boolean
+```
+- **Descrição**: Verifica se conta foi paga
+- **Parâmetros**:
+  - `contaId`: ID da conta
+  - `mes`: Mês (0-11)
+  - `ano`: Ano (YYYY)
+- **Resposta**: `boolean`
+
+##### 3. Gerenciamento de Metas
+
+**POST** `/addDeposito`
+```typescript
+addDeposito(novoDeposito: Omit<DepositoMeta, "id" | "data">): void
+```
+- **Descrição**: Adiciona depósito para meta
+- **Parâmetros**:
+  - `novoDeposito`: Dados do depósito
+- **Resposta**: `void`
+
+**DELETE** `/deleteDeposito`
+```typescript
+deleteDeposito(id: string): void
+```
+- **Descrição**: Remove depósito
+- **Parâmetros**:
+  - `id`: ID do depósito
+- **Resposta**: `void`
+
+##### 4. Cálculos Financeiros
+
+**GET** `/financialSummary`
+```typescript
+// Propriedades computadas
+totalNecessidades: number
+totalDesejos: number
+totalDividas: number
+totalDespesas: number
+saldoAposDespesas: number
+saldoFinal: number
+```
+
+## Supabase Integration API
+
+### Autenticação
+
+#### Endpoint: `lib/supabase/client.ts`
+
+**Descrição**: Cliente Supabase para autenticação e operações de banco
+
+**Métodos de Autenticação**:
+
+##### POST `/auth/signin`
+```typescript
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: string,
+  password: string
+})
+```
+- **Descrição**: Login com email e senha
+- **Parâmetros**:
+  - `email`: Email do usuário
+  - `password`: Senha do usuário
+- **Resposta**:
+  - `data`: Dados da sessão
+  - `error`: Erro se houver
+
+##### POST `/auth/signout`
+```typescript
+const { error } = await supabase.auth.signOut()
+```
+- **Descrição**: Logout do usuário
+- **Resposta**:
+  - `error`: Erro se houver
+
+##### GET `/auth/session`
+```typescript
+const { data: { session } } = await supabase.auth.getSession()
+```
+- **Descrição**: Obtém sessão atual
+- **Resposta**:
+  - `session`: Dados da sessão ou null
+
+### Middleware de Proteção
+
+#### Endpoint: `middleware.ts`
+
+**Descrição**: Middleware para proteção de rotas
+
+**Rotas Protegidas**:
+- `/dashboard/*` - Redireciona para `/login` se não autenticado
+
+**Configuração**:
+```typescript
+export const config = {
+  matcher: ['/dashboard/:path*']
+}
+```
+
+## Formatos de Resposta
+
+### Resposta de Sucesso
+```typescript
+{
+  success: true,
+  data: T,                    // Dados da resposta
+  message?: string            // Mensagem opcional
+}
+```
+
+### Resposta de Erro
+```typescript
+{
+  success: false,
+  error: {
+    code: string,             // Código do erro
+    message: string,          // Mensagem do erro
+    details?: any             // Detalhes adicionais
+  }
+}
+```
+
+## Códigos de Status HTTP
+
+- **200**: Sucesso
+- **201**: Criado com sucesso
+- **400**: Requisição inválida
+- **401**: Não autorizado
+- **403**: Proibido
+- **404**: Não encontrado
+- **500**: Erro interno do servidor
+
+## Exemplos de Uso
+
+### 1. Adicionar Nova Conta
+```typescript
+import { useFinancialData } from '@/hooks/useFinancialData'
+
+const { addConta } = useFinancialData()
+
+const handleAddAccount = () => {
+  addConta({
+    nome: "Netflix",
+    valor: 39.90,
+    categoria: "desejo",
+    dataVencimento: 15,
+    status: "ativo",
+    icone: "Smartphone"
+  })
+}
+```
+
+### 2. Marcar Pagamento
+```typescript
+const { togglePagamento, isPago } = useFinancialData()
+
+const handlePaymentToggle = (contaId: string) => {
+  const currentMonth = new Date().getMonth()
+  const currentYear = new Date().getFullYear()
+  
+  togglePagamento(contaId, currentMonth, currentYear)
+  
+  // Verificar status
+  const paid = isPago(contaId, currentMonth, currentYear)
+  console.log(`Conta ${contaId} está paga: ${paid}`)
+}
+```
+
+### 3. Obter Resumo Financeiro
+```typescript
+const { 
+  totalNecessidades, 
+  totalDesejos, 
+  saldoFinal 
+} = useFinancialData()
+
+console.log(`Necessidades: R$ ${totalNecessidades}`)
+console.log(`Desejos: R$ ${totalDesejos}`)
+console.log(`Saldo Final: R$ ${saldoFinal}`)
+```
+
+### 4. Autenticação
+```typescript
+import { createClient } from '@/lib/supabase/client'
+
+const supabase = createClient()
+
+// Login
+const handleLogin = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  })
+  
+  if (error) {
+    console.error('Erro no login:', error.message)
+    return
+  }
+  
+  // Redirecionar para dashboard
+  router.push('/dashboard')
+}
+
+// Verificar sessão
+const checkSession = async () => {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session !== null
+}
+```
+
+## Limitações e Restrições
+
+### Limitações Atuais
+1. **Dados em Memória**: Todos os dados são mantidos em memória e são perdidos ao recarregar a página
+2. **Sem Persistência**: Não há sincronização com banco de dados
+3. **Usuário Único**: Não suporta múltiplos usuários simultâneos
+4. **Sem Backup**: Não há sistema de backup automático
+
+### Restrições de Segurança
+1. **Autenticação Obrigatória**: Todas as rotas `/dashboard/*` requerem autenticação
+2. **Validação de Dados**: Todos os inputs devem ser validados antes do processamento
+3. **Sanitização**: Dados de entrada devem ser sanitizados
+
+### Limitações de Performance
+1. **Cálculos Síncronos**: Todos os cálculos financeiros são executados sincronamente
+2. **Sem Cache**: Não há sistema de cache implementado
+3. **Re-renders**: Mudanças de estado causam re-renderização completa
+
+## Credenciais de Desenvolvimento
+
+### Usuário Padrão
+- **Email**: `admin@example.com`
+- **Senha**: `admin123!`
+
+### Reset de Senha
+```bash
+psql -d v0_tactical_db -c "SELECT reset_user_password('admin', 'novaSenha');"
+```
+
+## Próximas Implementações
+
+### API REST Planejada
+1. **Endpoints CRUD** para contas, pagamentos e metas
+2. **Sistema de Cache** com Redis
+3. **Validação de Schema** com Zod
+4. **Rate Limiting** para proteção contra abuso
+5. **Logs de Auditoria** para todas as operações
+
+### Melhorias de Performance
+1. **Paginação** para grandes volumes de dados
+2. **Indexação** de consultas frequentes
+3. **Compressão** de respostas
+4. **CDN** para assets estáticos
+description:
+globs:
+alwaysApply: false
+---

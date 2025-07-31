@@ -1,0 +1,392 @@
+# Accessibility Patterns for Financial Dashboard
+
+## WCAG 2.1 Compliance
+
+### Color and Contrast
+Ensure proper color contrast ratios for financial data:
+
+```typescript
+// Use semantic colors with proper contrast
+// ✅ Good - High contrast for financial data
+<div className="text-green-600 dark:text-green-400">+R$ 1.000,00</div>
+<div className="text-red-600 dark:text-red-400">-R$ 500,00</div>
+
+// ❌ Bad - Low contrast colors
+<div className="text-gray-400">R$ 1.000,00</div>
+```
+
+### Focus Management
+Implement proper focus management for interactive elements:
+
+```typescript
+// Use proper focus indicators
+<button 
+  className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+  onClick={handleAction}
+>
+  Action Button
+</button>
+
+// Skip links for keyboard navigation
+<a 
+  href="#main-content" 
+  className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded"
+>
+  Skip to main content
+</a>
+```
+
+## Semantic HTML Structure
+
+### Financial Data Semantics
+Use semantic HTML for financial information:
+
+```typescript
+// Use proper heading hierarchy
+<h1>Painel Financeiro Familiar</h1>
+<h2>Visão Geral</h2>
+<h3>Receitas do Mês</h3>
+
+// Use semantic elements for financial data
+<dl className="grid grid-cols-2 gap-4">
+  <dt className="font-semibold">Receita Total:</dt>
+  <dd className="text-green-600">R$ 5.000,00</dd>
+  <dt className="font-semibold">Despesa Total:</dt>
+  <dd className="text-red-600">R$ 3.200,00</dd>
+  <dt className="font-semibold">Saldo:</dt>
+  <dd className="text-blue-600">R$ 1.800,00</dd>
+</dl>
+```
+
+### Form Accessibility
+Implement accessible forms for financial data entry:
+
+```typescript
+// Proper form labels and associations
+<div className="space-y-4">
+  <div>
+    <label htmlFor="account-name" className="block text-sm font-medium">
+      Nome da Conta
+    </label>
+    <input
+      id="account-name"
+      type="text"
+      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      aria-describedby="account-name-help"
+      required
+    />
+    <p id="account-name-help" className="mt-1 text-sm text-gray-500">
+      Digite o nome da conta (ex: Aluguel, Salário)
+    </p>
+  </div>
+  
+  <div>
+    <label htmlFor="account-value" className="block text-sm font-medium">
+      Valor
+    </label>
+    <input
+      id="account-value"
+      type="number"
+      step="0.01"
+      min="0"
+      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      aria-describedby="account-value-help"
+      required
+    />
+    <p id="account-value-help" className="mt-1 text-sm text-gray-500">
+      Digite o valor em reais (ex: 1500.50)
+    </p>
+  </div>
+</div>
+```
+
+## ARIA Patterns
+
+### Financial Status Indicators
+Use ARIA labels for financial status:
+
+```typescript
+// Account status with ARIA
+<div 
+  role="status" 
+  aria-live="polite"
+  className="flex items-center space-x-2"
+>
+  <span 
+    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+      isPaid 
+        ? 'bg-green-100 text-green-800' 
+        : 'bg-red-100 text-red-800'
+    }`}
+    aria-label={isPaid ? 'Conta paga' : 'Conta pendente'}
+  >
+    {isPaid ? 'Pago' : 'Pendente'}
+  </span>
+</div>
+
+// Progress indicators
+<div role="progressbar" aria-valuenow={progresso} aria-valuemin="0" aria-valuemax="100">
+  <div 
+    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+    style={{ width: `${progresso}%` }}
+  />
+  <span className="sr-only">{progresso}% completo</span>
+</div>
+```
+
+### Interactive Elements
+Implement proper ARIA for interactive components:
+
+```typescript
+// Toggle buttons with ARIA
+<button
+  onClick={handleTogglePayment}
+  aria-pressed={isPaid}
+  aria-label={`${isPaid ? 'Desmarcar' : 'Marcar'} como pago`}
+  className="focus:outline-none focus:ring-2 focus:ring-blue-500"
+>
+  {isPaid ? '✓ Pago' : '○ Pendente'}
+</button>
+
+// Dialog/Modal accessibility
+<Dialog>
+  <DialogTrigger asChild>
+    <Button aria-haspopup="dialog">Adicionar Conta</Button>
+  </DialogTrigger>
+  <DialogContent role="dialog" aria-labelledby="dialog-title">
+    <DialogHeader>
+      <DialogTitle id="dialog-title">Adicionar Nova Conta</DialogTitle>
+    </DialogHeader>
+    {/* Dialog content */}
+  </DialogContent>
+</Dialog>
+```
+
+## Keyboard Navigation
+
+### Tab Order
+Ensure logical tab order for financial forms:
+
+```typescript
+// Logical tab order for account form
+<form className="space-y-4">
+  <input 
+    type="text" 
+    placeholder="Nome da conta"
+    tabIndex={1}
+    autoFocus
+  />
+  <input 
+    type="number" 
+    placeholder="Valor"
+    tabIndex={2}
+  />
+  <select tabIndex={3}>
+    <option value="receita">Receita</option>
+    <option value="despesa">Despesa</option>
+  </select>
+  <input 
+    type="date" 
+    tabIndex={4}
+  />
+  <button type="submit" tabIndex={5}>
+    Salvar
+  </button>
+</form>
+```
+
+### Keyboard Shortcuts
+Implement keyboard shortcuts for power users:
+
+```typescript
+// Keyboard shortcuts for common actions
+useEffect(() => {
+  const handleKeyDown = (event: KeyboardEvent) => {
+    // Ctrl/Cmd + N to add new account
+    if ((event.ctrlKey || event.metaKey) && event.key === 'n') {
+      event.preventDefault()
+      setShowAddAccountDialog(true)
+    }
+    
+    // Escape to close dialogs
+    if (event.key === 'Escape') {
+      setShowAddAccountDialog(false)
+    }
+  }
+
+  document.addEventListener('keydown', handleKeyDown)
+  return () => document.removeEventListener('keydown', handleKeyDown)
+}, [])
+```
+
+## Screen Reader Support
+
+### Financial Data Announcements
+Provide screen reader announcements for financial updates:
+
+```typescript
+// Live regions for financial updates
+<div 
+  aria-live="polite" 
+  aria-atomic="true"
+  className="sr-only"
+>
+  {financialUpdate && `Saldo atualizado: ${formatCurrency(saldoFinal)}`}
+</div>
+
+// Status announcements
+<div 
+  role="status" 
+  aria-live="assertive"
+  className="sr-only"
+>
+  {statusMessage}
+</div>
+```
+
+### Data Tables
+Implement accessible data tables for financial information:
+
+```typescript
+// Accessible financial data table
+<table className="min-w-full divide-y divide-gray-200">
+  <caption className="sr-only">Lista de contas financeiras</caption>
+  <thead>
+    <tr>
+      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        Nome da Conta
+      </th>
+      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        Valor
+      </th>
+      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+        Status
+      </th>
+    </tr>
+  </thead>
+  <tbody className="bg-white divide-y divide-gray-200">
+    {contas.map((conta) => (
+      <tr key={conta.id}>
+        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+          {conta.nome}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+          {formatCurrency(conta.valor)}
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
+          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            conta.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {conta.ativo ? 'Ativo' : 'Suspenso'}
+          </span>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+```
+
+## Error Handling and Validation
+
+### Accessible Error Messages
+Provide accessible error messages:
+
+```typescript
+// Accessible form validation
+<div>
+  <label htmlFor="account-value">Valor</label>
+  <input
+    id="account-value"
+    type="number"
+    aria-describedby="account-value-error"
+    aria-invalid={hasError}
+  />
+  {hasError && (
+    <div 
+      id="account-value-error" 
+      role="alert" 
+      className="text-red-600 text-sm mt-1"
+    >
+      Por favor, digite um valor válido maior que zero.
+    </div>
+  )}
+</div>
+```
+
+### Loading States
+Implement accessible loading states:
+
+```typescript
+// Accessible loading indicators
+<div 
+  role="status" 
+  aria-live="polite"
+  className="flex items-center space-x-2"
+>
+  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" />
+  <span>Carregando dados financeiros...</span>
+</div>
+```
+
+## Mobile Accessibility
+
+### Touch Targets
+Ensure proper touch target sizes:
+
+```typescript
+// Minimum 44px touch targets
+<button 
+  className="min-h-[44px] min-w-[44px] px-4 py-2"
+  onClick={handleAction}
+>
+  Action
+</button>
+
+// Proper spacing for touch interactions
+<div className="space-y-4">
+  <button className="w-full h-12">Large Touch Target</button>
+</div>
+```
+
+### Responsive Accessibility
+Ensure accessibility across all screen sizes:
+
+```typescript
+// Responsive accessibility considerations
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  {/* Ensure proper focus management across breakpoints */}
+  <div className="focus-within:ring-2 focus-within:ring-blue-500 rounded-lg">
+    <ContaCard conta={conta} />
+  </div>
+</div>
+```
+
+## Testing Accessibility
+
+### Automated Testing
+Implement accessibility testing:
+
+```typescript
+// Jest-axe for accessibility testing
+import { axe, toHaveNoViolations } from 'jest-axe'
+
+expect.extend(toHaveNoViolations)
+
+it('should not have accessibility violations', async () => {
+  const { container } = render(<FinancialDashboard />)
+  const results = await axe(container)
+  expect(results).toHaveNoViolations()
+})
+```
+
+### Manual Testing Checklist
+- [ ] Test with screen readers (NVDA, JAWS, VoiceOver)
+- [ ] Test keyboard navigation (Tab, Enter, Space, Arrow keys)
+- [ ] Test with high contrast mode
+- [ ] Test with zoom (200% and 400%)
+- [ ] Test with different color vision deficiencies
+- [ ] Test on mobile devices with accessibility features enabled
+description:
+globs:
+alwaysApply: false
+---

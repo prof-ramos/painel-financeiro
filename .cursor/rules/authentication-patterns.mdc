@@ -1,0 +1,197 @@
+# Authentication and Security Patterns
+
+## Authentication Flow
+
+### Middleware Protection
+The application uses [middleware.ts](mdc:middleware.ts) to protect routes. All sensitive routes are automatically redirected to login if not authenticated.
+
+### Protected Routes
+- `/dashboard` - Main dashboard (protected)
+- `/agent-network` - Agent network view (protected)
+- `/command-center` - Command center (protected)
+- `/intelligence` - Intelligence view (protected)
+- `/operations` - Operations view (protected)
+- `/systems` - Systems view (protected)
+
+### Public Routes
+- `/` - Root page (redirects based on auth status)
+- `/login` - Login page (public)
+
+## Authentication Implementation
+
+### Supabase Integration
+The project uses Supabase for authentication. Follow these patterns:
+
+```typescript
+// Authentication check in components
+import { createClient } from '@/lib/supabase/client'
+
+const supabase = createClient()
+
+// Check authentication status
+const { data: { user } } = await supabase.auth.getUser()
+
+// Sign in
+const { data, error } = await supabase.auth.signInWithPassword({
+  email: email,
+  password: password
+})
+
+// Sign out
+const { error } = await supabase.auth.signOut()
+```
+
+### Session Management
+```typescript
+// Get current session
+const { data: { session } } = await supabase.auth.getSession()
+
+// Listen to auth changes
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN') {
+    // Handle sign in
+  } else if (event === 'SIGNED_OUT') {
+    // Handle sign out
+  }
+})
+```
+
+## Security Best Practices
+
+### Route Protection
+Always check authentication status before rendering protected content:
+
+```typescript
+// In protected components
+const { user } = useAuth()
+
+if (!user) {
+  return <div>Loading...</div>
+}
+
+// Render protected content
+return <ProtectedComponent />
+```
+
+### Form Validation
+Implement proper validation for login forms:
+
+```typescript
+// Email validation
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+// Password validation
+const validatePassword = (password: string): boolean => {
+  return password.length >= 6
+}
+```
+
+### Error Handling
+Handle authentication errors gracefully:
+
+```typescript
+// Login error handling
+const handleLogin = async (email: string, password: string) => {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
+    
+    if (error) {
+      // Handle specific error types
+      if (error.message.includes('Invalid login credentials')) {
+        setError('Credenciais inválidas')
+      } else {
+        setError('Erro ao fazer login')
+      }
+      return
+    }
+    
+    // Successful login
+    router.push('/dashboard')
+  } catch (error) {
+    setError('Erro inesperado')
+  }
+}
+```
+
+## Default Credentials
+
+### Development Credentials
+For development and testing, use these default credentials:
+- **Username**: `admin`
+- **Password**: `admin123!`
+
+### Password Reset
+To reset a user's password in development:
+
+```bash
+psql -d v0_tactical_db -c "SELECT reset_user_password('admin', 'novaSenha');"
+```
+
+## Authentication Hooks
+
+### Custom Auth Hook Pattern
+Follow the pattern for creating authentication hooks:
+
+```typescript
+// useAuth hook pattern
+export const useAuth = () => {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Get initial session
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user ?? null)
+      setLoading(false)
+    }
+
+    getSession()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return { user, loading }
+}
+```
+
+## Security Considerations
+
+### Environment Variables
+Store sensitive configuration in environment variables:
+
+```typescript
+// .env.local
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Client-Side Security
+- Never expose sensitive data in client-side code
+- Use environment variables for public keys only
+- Implement proper CORS policies
+- Validate all user inputs
+
+### Session Security
+- Implement proper session timeout
+- Use secure cookies
+- Implement CSRF protection
+- Log authentication events for security monitoring
+description:
+globs:
+alwaysApply: false
+---

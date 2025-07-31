@@ -1,0 +1,362 @@
+# Performance Optimization Patterns
+
+## Next.js Performance Best Practices
+
+### App Router Optimization
+The project uses Next.js 15 with App Router. Follow these optimization patterns:
+
+### Server Components
+Use Server Components when possible to reduce client-side JavaScript:
+
+```typescript
+// Prefer Server Components for static content
+export default function StaticContent() {
+  return (
+    <div>
+      <h1>Financial Dashboard</h1>
+      <p>Static content that doesn't need interactivity</p>
+    </div>
+  )
+}
+```
+
+### Client Components
+Only use Client Components when interactivity is needed:
+
+```typescript
+'use client'
+
+// Use Client Components for interactive elements
+export default function InteractiveComponent() {
+  const [state, setState] = useState()
+  
+  return (
+    <button onClick={() => setState(!state)}>
+      Interactive Button
+    </button>
+  )
+}
+```
+
+## React Performance Patterns
+
+### Memoization Strategies
+Use React.memo, useMemo, and useCallback appropriately:
+
+```typescript
+// Memoize expensive calculations
+const totalReceita = useMemo(() => {
+  return contas
+    .filter(conta => conta.tipo === 'receita' && conta.ativo)
+    .reduce((sum, conta) => sum + conta.valor, 0)
+}, [contas])
+
+// Memoize callback functions
+const handleTogglePayment = useCallback((contaId: string) => {
+  // Payment toggle logic
+}, [pagamentos, currentMonth, currentYear])
+
+// Memoize components that receive stable props
+const ContaCard = React.memo(({ conta, isPaid, onTogglePayment }) => {
+  return (
+    <div>
+      {/* Component content */}
+    </div>
+  )
+})
+```
+
+### State Management Optimization
+Optimize state updates to prevent unnecessary re-renders:
+
+```typescript
+// Use functional updates for state that depends on previous state
+const addConta = useCallback((novaConta: Omit<Conta, 'id'>) => {
+  setContas(prev => [...prev, { ...novaConta, id: Date.now().toString() }])
+}, [])
+
+// Batch related state updates
+const handlePaymentToggle = useCallback((contaId: string) => {
+  setPagamentos(prev => {
+    const existing = prev.find(p => 
+      p.contaId === contaId && 
+      p.mes === currentMonth && 
+      p.ano === currentYear
+    )
+    
+    if (existing) {
+      return prev.filter(p => p.id !== existing.id)
+    } else {
+      return [...prev, {
+        id: Date.now().toString(),
+        contaId,
+        mes: currentMonth,
+        ano: currentYear,
+        dataPagamento: new Date().toISOString()
+      }]
+    }
+  })
+}, [currentMonth, currentYear])
+```
+
+## Data Loading Optimization
+
+### Lazy Loading
+Implement lazy loading for non-critical components:
+
+```typescript
+// Lazy load heavy components
+const HeavyChart = lazy(() => import('@/components/HeavyChart'))
+
+// Use Suspense for loading states
+<Suspense fallback={<div>Loading chart...</div>}>
+  <HeavyChart data={chartData} />
+</Suspense>
+```
+
+### Data Fetching Optimization
+Optimize data fetching patterns:
+
+```typescript
+// Use SWR or React Query for data fetching with caching
+import useSWR from 'swr'
+
+const { data, error, isLoading } = useSWR('/api/financial-data', fetcher, {
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false,
+  dedupingInterval: 60000 // 1 minute
+})
+```
+
+## Bundle Optimization
+
+### Code Splitting
+Implement proper code splitting:
+
+```typescript
+// Dynamic imports for route-based code splitting
+const Dashboard = dynamic(() => import('@/components/Dashboard'), {
+  loading: () => <DashboardSkeleton />,
+  ssr: false // If component uses browser APIs
+})
+
+// Component-based code splitting
+const ChartComponent = dynamic(() => import('@/components/Chart'), {
+  loading: () => <ChartSkeleton />
+})
+```
+
+### Tree Shaking
+Ensure proper tree shaking by using named exports:
+
+```typescript
+// Prefer named exports for better tree shaking
+export { Button } from './Button'
+export { Card } from './Card'
+export { Dialog } from './Dialog'
+
+// Avoid default exports when possible
+export const FinancialCalculator = () => {
+  // Component implementation
+}
+```
+
+## Image Optimization
+
+### Next.js Image Component
+Use Next.js Image component for optimized images:
+
+```typescript
+import Image from 'next/image'
+
+// Optimized image loading
+<Image
+  src="/dashboard-chart.png"
+  alt="Financial Chart"
+  width={800}
+  height={400}
+  priority={true} // For above-the-fold images
+  placeholder="blur"
+  blurDataURL="data:image/jpeg;base64,..."
+/>
+```
+
+## CSS and Styling Optimization
+
+### Tailwind CSS Optimization
+Optimize Tailwind CSS usage:
+
+```typescript
+// Use Tailwind's JIT mode (enabled by default in v3+)
+// Only include used classes in the final bundle
+
+// Prefer utility classes over custom CSS
+<div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm">
+  {/* Content */}
+</div>
+
+// Use CSS variables for dynamic values
+<div className="bg-primary text-primary-foreground">
+  {/* Content */}
+</div>
+```
+
+### CSS-in-JS Optimization
+If using CSS-in-JS, optimize for performance:
+
+```typescript
+// Use styled-components with proper optimization
+import styled from 'styled-components'
+
+const StyledCard = styled.div`
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: var(--background);
+  border: 1px solid var(--border);
+`
+
+// Avoid inline styles for better performance
+// ❌ Bad
+<div style={{ padding: '1rem', borderRadius: '0.5rem' }}>
+
+// ✅ Good
+<div className="p-4 rounded-lg">
+```
+
+## Rendering Optimization
+
+### Virtual Scrolling
+For large lists, implement virtual scrolling:
+
+```typescript
+// Use react-window for large lists
+import { FixedSizeList as List } from 'react-window'
+
+const VirtualizedAccountList = ({ accounts }) => {
+  const Row = ({ index, style }) => (
+    <div style={style}>
+      <ContaCard conta={accounts[index]} />
+    </div>
+  )
+
+  return (
+    <List
+      height={400}
+      itemCount={accounts.length}
+      itemSize={120}
+      width="100%"
+    >
+      {Row}
+    </List>
+  )
+}
+```
+
+### Debouncing and Throttling
+Implement debouncing for user interactions:
+
+```typescript
+import { useDebouncedCallback } from 'use-debounce'
+
+// Debounce search input
+const debouncedSearch = useDebouncedCallback(
+  (searchTerm: string) => {
+    // Perform search
+    setSearchResults(searchAccounts(searchTerm))
+  },
+  300 // 300ms delay
+)
+
+// Throttle scroll events
+const throttledScroll = useThrottledCallback(
+  (event) => {
+    // Handle scroll
+  },
+  100 // 100ms throttle
+)
+```
+
+## Monitoring and Metrics
+
+### Performance Monitoring
+Implement performance monitoring:
+
+```typescript
+// Use Next.js built-in performance monitoring
+export function reportWebVitals(metric: NextWebVitalsMetric) {
+  console.log(metric)
+  
+  // Send to analytics service
+  if (metric.label === 'web-vital') {
+    // Send to analytics
+  }
+}
+
+// Custom performance marks
+performance.mark('financial-calculation-start')
+// ... calculation logic
+performance.mark('financial-calculation-end')
+performance.measure('financial-calculation', 'financial-calculation-start', 'financial-calculation-end')
+```
+
+### Bundle Analysis
+Regularly analyze bundle size:
+
+```bash
+# Analyze bundle size
+npm run build
+npm run analyze
+
+# Or use Next.js built-in analysis
+ANALYZE=true npm run build
+```
+
+## Caching Strategies
+
+### Browser Caching
+Implement proper caching headers:
+
+```typescript
+// In next.config.mjs
+const nextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
+  },
+}
+```
+
+### Data Caching
+Implement data caching strategies:
+
+```typescript
+// Cache financial calculations
+const useCachedFinancialData = () => {
+  const [cache, setCache] = useState(new Map())
+  
+  const getCachedCalculation = useCallback((key: string, calculation: () => any) => {
+    if (cache.has(key)) {
+      return cache.get(key)
+    }
+    
+    const result = calculation()
+    setCache(prev => new Map(prev).set(key, result))
+    return result
+  }, [cache])
+  
+  return { getCachedCalculation }
+}
+```
+description:
+globs:
+alwaysApply: false
+---

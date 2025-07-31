@@ -1,0 +1,159 @@
+# Financial Data Patterns and Calculations
+
+## Financial Data Management
+
+### Core Data Hook
+All financial data operations must go through [hooks/useFinancialData.ts](mdc:hooks/useFinancialData.ts). This hook manages:
+- Account data (contas)
+- Payment status tracking
+- Financial calculations
+- Data persistence (in-memory)
+
+### Data Types
+Follow the interfaces defined in [types/financial.ts](mdc:types/financial.ts):
+- `Conta` - Account information
+- `Pagamento` - Payment tracking
+- `Meta` - Savings goals
+- `ViewType` - Navigation states
+
+## Financial Calculations
+
+### Account Balance Calculations
+```typescript
+// Total income calculation
+const totalReceita = contas
+  .filter(conta => conta.tipo === 'receita' && conta.ativo)
+  .reduce((sum, conta) => sum + conta.valor, 0);
+
+// Total expenses calculation
+const totalDespesas = contas
+  .filter(conta => conta.tipo === 'despesa' && conta.ativo)
+  .reduce((sum, conta) => sum + conta.valor, 0);
+
+// Net balance
+const saldoFinal = totalReceita - totalDespesas;
+```
+
+### Payment Status Tracking
+```typescript
+// Check if account is paid for current month
+const isPaid = pagamentos.some(p => 
+  p.contaId === conta.id && 
+  p.mes === currentMonth && 
+  p.ano === currentYear
+);
+```
+
+### Goal Progress Calculation
+```typescript
+// Calculate goal progress percentage
+const progresso = (valorAtual / meta.valor) * 100;
+const progressoFormatado = Math.min(progresso, 100);
+```
+
+## Data Formatting Patterns
+
+### Currency Formatting
+Use the utility functions for consistent currency formatting:
+```typescript
+// Format currency values
+const valorFormatado = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL'
+}).format(valor);
+
+// Format percentages
+const percentualFormatado = `${progresso.toFixed(1)}%`;
+```
+
+### Date Formatting
+```typescript
+// Format dates for display
+const dataFormatada = new Date(data).toLocaleDateString('pt-BR');
+```
+
+## State Update Patterns
+
+### Adding New Account
+```typescript
+const novaConta: Conta = {
+  id: Date.now().toString(),
+  nome: nome,
+  valor: parseFloat(valor),
+  tipo: tipo as 'receita' | 'despesa',
+  ativo: true,
+  dataVencimento: dataVencimento
+};
+
+setContas(prev => [...prev, novaConta]);
+```
+
+### Toggling Payment Status
+```typescript
+const handleTogglePayment = (contaId: string) => {
+  const existingPayment = pagamentos.find(p => 
+    p.contaId === contaId && 
+    p.mes === currentMonth && 
+    p.ano === currentYear
+  );
+
+  if (existingPayment) {
+    setPagamentos(prev => prev.filter(p => p.id !== existingPayment.id));
+  } else {
+    const novoPagamento: Pagamento = {
+      id: Date.now().toString(),
+      contaId,
+      mes: currentMonth,
+      ano: currentYear,
+      dataPagamento: new Date().toISOString()
+    };
+    setPagamentos(prev => [...prev, novoPagamento]);
+  }
+};
+```
+
+## Data Export Patterns
+
+### CSV Export Format
+Follow the pattern in the export functionality:
+```typescript
+// CSV headers
+const headers = ['Nome', 'Tipo', 'Valor', 'Status', 'Data Vencimento'];
+
+// CSV data rows
+const rows = contas.map(conta => [
+  conta.nome,
+  conta.tipo,
+  conta.valor.toString(),
+  conta.ativo ? 'Ativo' : 'Suspenso',
+  conta.dataVencimento
+]);
+```
+
+## Error Handling
+
+### Data Validation
+```typescript
+// Validate account data before adding
+const validateConta = (conta: Partial<Conta>): boolean => {
+  return !!(
+    conta.nome?.trim() &&
+    conta.valor && conta.valor > 0 &&
+    conta.tipo &&
+    conta.dataVencimento
+  );
+};
+```
+
+### Safe Number Operations
+```typescript
+// Safe parsing of numeric values
+const parseSafeNumber = (value: string): number => {
+  const parsed = parseFloat(value);
+  return isNaN(parsed) ? 0 : parsed;
+};
+```
+description:
+globs:
+alwaysApply: false
+---

@@ -1,0 +1,329 @@
+# Testing Patterns for Financial Dashboard
+
+## Testing Strategy
+
+### Test Types
+- **Unit Tests**: Test individual functions and components
+- **Integration Tests**: Test component interactions
+- **E2E Tests**: Test complete user workflows
+- **Financial Calculation Tests**: Test all financial logic
+
+## Component Testing Patterns
+
+### Financial Component Testing
+Test components that handle financial data with proper mocking:
+
+```typescript
+// Test ContaCard component
+import { render, screen, fireEvent } from '@testing-library/react'
+import { ContaCard } from '@/components/ContaCard'
+
+const mockConta = {
+  id: '1',
+  nome: 'Salário',
+  valor: 5000,
+  tipo: 'receita' as const,
+  ativo: true,
+  dataVencimento: '2024-01-15'
+}
+
+const mockOnTogglePayment = jest.fn()
+const mockOnEdit = jest.fn()
+const mockOnDelete = jest.fn()
+
+describe('ContaCard', () => {
+  it('renders account information correctly', () => {
+    render(
+      <ContaCard
+        conta={mockConta}
+        isPaid={false}
+        onTogglePayment={mockOnTogglePayment}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    )
+
+    expect(screen.getByText('Salário')).toBeInTheDocument()
+    expect(screen.getByText('R$ 5.000,00')).toBeInTheDocument()
+  })
+
+  it('calls onTogglePayment when payment button is clicked', () => {
+    render(
+      <ContaCard
+        conta={mockConta}
+        isPaid={false}
+        onTogglePayment={mockOnTogglePayment}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /marcar como pago/i }))
+    expect(mockOnTogglePayment).toHaveBeenCalledWith('1')
+  })
+})
+```
+
+### Hook Testing
+Test custom hooks with proper setup and teardown:
+
+```typescript
+// Test useFinancialData hook
+import { renderHook, act } from '@testing-library/react'
+import { useFinancialData } from '@/hooks/useFinancialData'
+
+describe('useFinancialData', () => {
+  it('adds new account correctly', () => {
+    const { result } = renderHook(() => useFinancialData())
+
+    act(() => {
+      result.current.addConta({
+        nome: 'Nova Conta',
+        valor: 1000,
+        tipo: 'despesa',
+        dataVencimento: '2024-01-15'
+      })
+    })
+
+    expect(result.current.contas).toHaveLength(1)
+    expect(result.current.contas[0].nome).toBe('Nova Conta')
+  })
+
+  it('calculates totals correctly', () => {
+    const { result } = renderHook(() => useFinancialData())
+
+    // Add test data
+    act(() => {
+      result.current.addConta({
+        nome: 'Salário',
+        valor: 5000,
+        tipo: 'receita',
+        dataVencimento: '2024-01-15'
+      })
+      result.current.addConta({
+        nome: 'Aluguel',
+        valor: 1500,
+        tipo: 'despesa',
+        dataVencimento: '2024-01-10'
+      })
+    })
+
+    expect(result.current.totalReceita).toBe(5000)
+    expect(result.current.totalDespesas).toBe(1500)
+    expect(result.current.saldoFinal).toBe(3500)
+  })
+})
+```
+
+## Financial Calculation Testing
+
+### Currency Formatting Tests
+```typescript
+// Test currency formatting utilities
+describe('Currency Formatting', () => {
+  it('formats currency values correctly', () => {
+    const formatCurrency = (value: number) => {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value)
+    }
+
+    expect(formatCurrency(1000)).toBe('R$ 1.000,00')
+    expect(formatCurrency(1234.56)).toBe('R$ 1.234,56')
+    expect(formatCurrency(0)).toBe('R$ 0,00')
+  })
+})
+```
+
+### Payment Status Tests
+```typescript
+// Test payment status logic
+describe('Payment Status', () => {
+  it('correctly identifies paid accounts', () => {
+    const currentMonth = new Date().getMonth()
+    const currentYear = new Date().getFullYear()
+    
+    const pagamentos = [
+      {
+        id: '1',
+        contaId: 'conta1',
+        mes: currentMonth,
+        ano: currentYear,
+        dataPagamento: new Date().toISOString()
+      }
+    ]
+
+    const isPaid = (contaId: string) => {
+      return pagamentos.some(p => 
+        p.contaId === contaId && 
+        p.mes === currentMonth && 
+        p.ano === currentYear
+      )
+    }
+
+    expect(isPaid('conta1')).toBe(true)
+    expect(isPaid('conta2')).toBe(false)
+  })
+})
+```
+
+## Form Testing Patterns
+
+### Form Validation Tests
+```typescript
+// Test form validation
+describe('Form Validation', () => {
+  it('validates required fields', () => {
+    const validateConta = (conta: Partial<Conta>) => {
+      return !!(
+        conta.nome?.trim() &&
+        conta.valor && conta.valor > 0 &&
+        conta.tipo &&
+        conta.dataVencimento
+      )
+    }
+
+    expect(validateConta({
+      nome: 'Teste',
+      valor: 100,
+      tipo: 'receita',
+      dataVencimento: '2024-01-15'
+    })).toBe(true)
+
+    expect(validateConta({
+      nome: '',
+      valor: 100,
+      tipo: 'receita',
+      dataVencimento: '2024-01-15'
+    })).toBe(false)
+  })
+})
+```
+
+## Mock Data Patterns
+
+### Financial Data Mocks
+```typescript
+// Mock financial data for testing
+export const mockFinancialData = {
+  contas: [
+    {
+      id: '1',
+      nome: 'Salário',
+      valor: 5000,
+      tipo: 'receita' as const,
+      ativo: true,
+      dataVencimento: '2024-01-15'
+    },
+    {
+      id: '2',
+      nome: 'Aluguel',
+      valor: 1500,
+      tipo: 'despesa' as const,
+      ativo: true,
+      dataVencimento: '2024-01-10'
+    }
+  ],
+  pagamentos: [
+    {
+      id: '1',
+      contaId: '1',
+      mes: new Date().getMonth(),
+      ano: new Date().getFullYear(),
+      dataPagamento: new Date().toISOString()
+    }
+  ],
+  metas: [
+    {
+      id: '1',
+      nome: 'Viagem',
+      valor: 10000,
+      valorAtual: 3000,
+      dataLimite: '2024-12-31'
+    }
+  ]
+}
+```
+
+## Test Utilities
+
+### Custom Render Function
+```typescript
+// Custom render function with providers
+import { render as rtlRender } from '@testing-library/react'
+import { ThemeProvider } from '@/components/theme-provider'
+
+function render(ui: React.ReactElement, options = {}) {
+  return rtlRender(ui, {
+    wrapper: ({ children }) => (
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        {children}
+      </ThemeProvider>
+    ),
+    ...options
+  })
+}
+
+export * from '@testing-library/react'
+export { render }
+```
+
+## E2E Testing Patterns
+
+### User Workflow Tests
+```typescript
+// Test complete user workflows
+describe('Financial Dashboard E2E', () => {
+  it('allows user to add and manage accounts', async () => {
+    // Navigate to dashboard
+    await page.goto('/dashboard')
+    
+    // Add new account
+    await page.click('[data-testid="add-account-button"]')
+    await page.fill('[data-testid="account-name"]', 'Nova Conta')
+    await page.fill('[data-testid="account-value"]', '1000')
+    await page.selectOption('[data-testid="account-type"]', 'despesa')
+    await page.fill('[data-testid="account-due-date"]', '2024-01-15')
+    await page.click('[data-testid="save-account"]')
+    
+    // Verify account was added
+    await expect(page.locator('text=Nova Conta')).toBeVisible()
+  })
+})
+```
+
+## Test Configuration
+
+### Jest Configuration
+Ensure proper Jest configuration for Next.js and TypeScript:
+
+```javascript
+// jest.config.js
+const nextJest = require('next/jest')
+
+const createJestConfig = nextJest({
+  dir: './',
+})
+
+const customJestConfig = {
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  testEnvironment: 'jest-environment-jsdom',
+  moduleNameMapping: {
+    '^@/(.*)$': '<rootDir>/$1',
+  },
+}
+
+module.exports = createJestConfig(customJestConfig)
+```
+
+### Test Coverage
+Aim for high test coverage, especially for:
+- Financial calculations
+- Data validation
+- User interactions
+- Error handling
+description:
+globs:
+alwaysApply: false
+---
