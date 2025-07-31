@@ -132,6 +132,14 @@ Para manter os dados persistentes, utilize o `docker-compose.yml` incluído nest
 
 3. O volume `postgres-data` garante que o banco de dados PostgreSQL não seja perdido entre atualizações.
 
+## 🗄️ Configuração do Supabase
+
+Para instruções completas de como executar o script `database-setup.sql` no Supabase
+e integrar o banco de dados ao deploy na Vercel, consulte o arquivo
+[`SUPABASE_GUIDE.md`](SUPABASE_GUIDE.md). Nele você encontrará passos para rodar o
+script via `psql`, definir as variáveis de ambiente e validar a conexão com o
+banco após o deploy.
+
 ## 📜 Scripts Disponíveis
 
 No diretório do projeto, você pode executar:
