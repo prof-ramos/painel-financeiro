@@ -1,0 +1,235 @@
+# State Management Patterns for Financial Dashboard
+
+## Centralized State Architecture
+
+The project uses a **centralized state management** approach through custom hooks, with [hooks/useFinancialData.ts](mdc:hooks/useFinancialData.ts) as the main state container.
+
+## Hook Structure Pattern
+
+### Main Financial Data Hook
+```typescript
+"use client"
+
+import { useState, useMemo } from "react"
+import type { Conta, Pagamento, DepositoMeta, Renda, FinancialSummary } from "@/types/financial"
+
+export const useFinancialData = () => {
+  // State declarations
+  const [contas, setContas] = useState<Conta[]>(initialContas)
+  const [pagamentos, setPagamentos] = useState<Pagamento[]>([])
+  const [depositos, setDepositos] = useState<DepositoMeta[]>([])
+  const [renda, setRenda] = useState<Renda>(initialRenda)
+
+  // Computed values with useMemo
+  const financialSummary = useMemo(() => {
+    // Calculation logic
+  }, [contas, pagamentos, depositos, renda])
+
+  // Action functions
+  const addConta = (novaConta: Omit<Conta, "id">) => {
+    // Implementation
+  }
+
+  const togglePagamento = (contaId: string, mes: number, ano: number) => {
+    // Implementation
+  }
+
+  // Return state and actions
+  return {
+    contas,
+    pagamentos,
+    depositos,
+    renda,
+    financialSummary,
+    addConta,
+    togglePagamento,
+    // ... other actions
+  }
+}
+```
+
+## State Update Patterns
+
+### Immutable Updates
+```typescript
+// ✅ Correct: Create new array/object
+const addConta = (novaConta: Omit<Conta, "id">) => {
+  const newConta: Conta = {
+    id: generateId(),
+    ...novaConta,
+  }
+  setContas(prev => [...prev, newConta])
+}
+
+// ❌ Incorrect: Mutate existing state
+const addConta = (novaConta: Omit<Conta, "id">) => {
+  contas.push(newConta) // This won't trigger re-render
+}
+```
+
+### Complex State Updates
+```typescript
+// Update specific item in array
+const updateConta = (id: string, updates: Partial<Conta>) => {
+  setContas(prev => prev.map(conta => 
+    conta.id === id ? { ...conta, ...updates } : conta
+  ))
+}
+
+// Remove item from array
+const deleteConta = (id: string) => {
+  setContas(prev => prev.filter(conta => conta.id !== id))
+}
+```
+
+## Computed State with useMemo
+
+### Financial Calculations
+```typescript
+const financialSummary = useMemo(() => {
+  const totalNecessidades = contas
+    .filter(conta => conta.categoria === "necessidade" && conta.status === "ativo")
+    .reduce((sum, conta) => sum + conta.valor, 0)
+
+  const totalDesejos = contas
+    .filter(conta => conta.categoria === "desejo" && conta.status === "ativo")
+    .reduce((sum, conta) => sum + conta.valor, 0)
+
+  const totalDividas = contas
+    .filter(conta => conta.categoria === "divida" && conta.status === "ativo")
+    .reduce((sum, conta) => sum + conta.valor, 0)
+
+  const totalDespesas = totalNecessidades + totalDesejos + totalDividas
+  const saldoAposDespesas = renda.salarioLiquido - totalDespesas
+  const saldoFinal = saldoAposDespesas + depositos.reduce((sum, dep) => sum + dep.valor, 0)
+
+  return {
+    totalNecessidades,
+    totalDesejos,
+    totalDividas,
+    totalDespesas,
+    saldoAposDespesas,
+    saldoFinal,
+  }
+}, [contas, renda, depositos])
+```
+
+## Action Function Patterns
+
+### Add Operations
+```typescript
+const addConta = (novaConta: Omit<Conta, "id">) => {
+  const newConta: Conta = {
+    id: crypto.randomUUID(), // or custom ID generator
+    ...novaConta,
+  }
+  setContas(prev => [...prev, newConta])
+}
+```
+
+### Toggle Operations
+```typescript
+const togglePagamento = (contaId: string, mes: number, ano: number) => {
+  setPagamentos(prev => {
+    const existingPayment = prev.find(
+      p => p.contaId === contaId && p.mes === mes && p.ano === ano
+    )
+
+    if (existingPayment) {
+      // Remove payment
+      return prev.filter(p => p !== existingPayment)
+    } else {
+      // Add payment
+      return [...prev, {
+        contaId,
+        mes,
+        ano,
+        pago: true,
+        dataPagamento: new Date().toISOString(),
+      }]
+    }
+  })
+}
+```
+
+### Status Toggle Operations
+```typescript
+const toggleContaStatus = (id: string) => {
+  setContas(prev => prev.map(conta => 
+    conta.id === id 
+      ? { ...conta, status: conta.status === "ativo" ? "suspenso" : "ativo" }
+      : conta
+  ))
+}
+```
+
+## Utility Functions in Hooks
+
+### Helper Functions
+```typescript
+const isPago = (contaId: string, mes: number, ano: number): boolean => {
+  return pagamentos.some(
+    p => p.contaId === contaId && p.mes === mes && p.ano === ano && p.pago
+  )
+}
+
+const getContasByCategoria = (categoria: Conta["categoria"]) => {
+  return contas.filter(conta => conta.categoria === categoria && conta.status === "ativo")
+}
+```
+
+## Error Handling in State
+
+### Validation in Actions
+```typescript
+const addConta = (novaConta: Omit<Conta, "id">) => {
+  // Validate required fields
+  if (!novaConta.nome || !novaConta.valor) {
+    throw new Error("Nome e valor são obrigatórios")
+  }
+
+  // Validate value is positive
+  if (novaConta.valor <= 0) {
+    throw new Error("Valor deve ser maior que zero")
+  }
+
+  const newConta: Conta = {
+    id: crypto.randomUUID(),
+    ...novaConta,
+  }
+  setContas(prev => [...prev, newConta])
+}
+```
+
+## Performance Considerations
+
+### Memoization Strategy
+```typescript
+// Memoize expensive calculations
+const expensiveCalculation = useMemo(() => {
+  return contas.reduce((acc, conta) => {
+    // Complex calculation
+    return acc + someComplexOperation(conta)
+  }, 0)
+}, [contas])
+
+// Memoize filtered arrays
+const activeContas = useMemo(() => {
+  return contas.filter(conta => conta.status === "ativo")
+}, [contas])
+```
+
+### State Splitting
+```typescript
+// Split large state objects into smaller pieces
+const [contas, setContas] = useState<Conta[]>([])
+const [pagamentos, setPagamentos] = useState<Pagamento[]>([])
+const [depositos, setDepositos] = useState<DepositoMeta[]>([])
+
+// Instead of one large state object
+// const [financialData, setFinancialData] = useState({ contas, pagamentos, depositos })
+```
+description:
+globs:
+alwaysApply: false
+---

@@ -1,0 +1,321 @@
+# Development Workflow for Financial Dashboard
+
+## Development Environment Setup
+
+### Prerequisites
+- Node.js v20.x or higher
+- pnpm (preferred) or npm
+- Git
+
+### Initial Setup
+```bash
+# Clone repository
+git clone <repository-url>
+cd painel-financeiro
+
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+```
+
+### Environment Variables
+Create `.env.local` for local development:
+```env
+# Supabase configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Database configuration (for scripts)
+DATABASE_PASSWORD=your_database_password
+BACKUP_ENCRYPTION_KEY=your_encryption_key
+```
+
+## Development Workflow
+
+### 1. Feature Development Process
+
+#### Adding New Features
+1. **Define Types**: Add interfaces to [types/financial.ts](mdc:types/financial.ts)
+2. **Update State**: Modify [hooks/useFinancialData.ts](mdc:hooks/useFinancialData.ts)
+3. **Create Components**: Add UI components in [components/](mdc:components/)
+4. **Update Navigation**: Modify [components/Navigation.tsx](mdc:components/Navigation.tsx)
+5. **Integrate Views**: Update [app/page.tsx](mdc:app/page.tsx)
+
+#### Example: Adding Investment Feature
+```typescript
+// 1. Add type
+interface Investimento {
+  id: string
+  nome: string
+  valor: number
+  tipo: "acoes" | "fundos" | "cripto"
+  dataInicio: string
+}
+
+// 2. Add to hook
+const [investimentos, setInvestimentos] = useState<Investimento[]>([])
+
+// 3. Create component
+export function InvestmentCard({ investimento }: { investimento: Investimento }) {
+  // Component implementation
+}
+
+// 4. Add to navigation
+const navigationItems = [
+  // ... existing items
+  { id: "investments", label: "Investimentos", icon: "TrendingUp" }
+]
+
+// 5. Add view
+{activeView === "investments" && <InvestmentView />}
+```
+
+### 2. Code Quality Standards
+
+#### TypeScript Requirements
+- Strict typing for all components and functions
+- Use `import type` for type-only imports
+- Define interfaces for all props and state
+- Avoid `any` type - use proper typing
+
+#### Component Standards
+- Use function components with TypeScript
+- Implement proper prop interfaces
+- Use destructuring for props
+- Follow naming conventions: PascalCase for components
+
+#### State Management
+- All financial data changes through [hooks/useFinancialData.ts](mdc:hooks/useFinancialData.ts)
+- Use `useMemo` for expensive calculations
+- Immutable state updates only
+- Local state for UI-only concerns
+
+### 3. Testing Strategy
+
+#### Unit Testing
+```bash
+# Install testing dependencies
+pnpm add -D jest @testing-library/react @testing-library/jest-dom @testing-library/user-event
+
+# Run tests
+pnpm test
+```
+
+#### Test File Structure
+```
+__tests__/
+├── components/
+│   ├── ContaCard.test.tsx
+│   └── Navigation.test.tsx
+├── hooks/
+│   └── useFinancialData.test.ts
+└── utils/
+    └── financial.test.ts
+```
+
+#### Component Testing Example
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react'
+import { ContaCard } from '@/components/ContaCard'
+
+describe('ContaCard', () => {
+  const mockConta = {
+    id: '1',
+    nome: 'Test Account',
+    valor: 100,
+    categoria: 'necessidade' as const,
+    dataVencimento: 10,
+    status: 'ativo' as const,
+    icone: 'Home'
+  }
+
+  it('renders account information correctly', () => {
+    render(<ContaCard conta={mockConta} onEdit={jest.fn()} onDelete={jest.fn()} />)
+    
+    expect(screen.getByText('Test Account')).toBeInTheDocument()
+    expect(screen.getByText('R$ 100,00')).toBeInTheDocument()
+  })
+})
+```
+
+#### Hook Testing Example
+```typescript
+import { renderHook, act } from '@testing-library/react'
+import { useFinancialData } from '@/hooks/useFinancialData'
+
+describe('useFinancialData', () => {
+  it('adds new account correctly', () => {
+    const { result } = renderHook(() => useFinancialData())
+    
+    act(() => {
+      result.current.addConta({
+        nome: 'New Account',
+        valor: 200,
+        categoria: 'necessidade',
+        dataVencimento: 15,
+        icone: 'Home'
+      })
+    })
+    
+    expect(result.current.contas).toHaveLength(initialContas.length + 1)
+  })
+})
+```
+
+### 4. Code Review Process
+
+#### Pre-commit Checklist
+- [ ] TypeScript compilation passes
+- [ ] All components properly typed
+- [ ] State updates are immutable
+- [ ] No console.log statements
+- [ ] Proper error handling
+- [ ] Responsive design tested
+- [ ] Dark mode compatibility
+
+#### Pull Request Requirements
+- Clear description of changes
+- Screenshots for UI changes
+- Test coverage for new features
+- Documentation updates if needed
+
+### 5. Performance Optimization
+
+#### Bundle Optimization
+```typescript
+// Use dynamic imports for large components
+const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
+  loading: () => <div>Loading...</div>
+})
+
+// Lazy load routes
+const InvestmentView = lazy(() => import('./InvestmentView'))
+```
+
+#### State Optimization
+```typescript
+// Memoize expensive calculations
+const expensiveValue = useMemo(() => {
+  return contas.reduce((sum, conta) => sum + complexCalculation(conta), 0)
+}, [contas])
+
+// Memoize filtered arrays
+const activeContas = useMemo(() => {
+  return contas.filter(conta => conta.status === 'ativo')
+}, [contas])
+```
+
+### 6. Deployment Process
+
+#### Development Deployment
+```bash
+# Build for development
+pnpm build
+
+# Start production server
+pnpm start
+```
+
+#### Production Deployment (Vercel)
+1. Connect repository to Vercel
+2. Configure environment variables
+3. Set build command: `pnpm build`
+4. Set output directory: `.next`
+5. Deploy automatically on push to main branch
+
+#### Docker Deployment
+```bash
+# Build Docker image
+docker build -t painel-financeiro .
+
+# Run with Docker Compose
+docker-compose up -d
+```
+
+### 7. Monitoring and Debugging
+
+#### Development Tools
+- React Developer Tools for component inspection
+- Redux DevTools for state debugging
+- Network tab for API calls
+- Console for error tracking
+
+#### Error Tracking
+```typescript
+// Error boundary implementation
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo)
+    // Send to error tracking service
+  }
+}
+```
+
+#### Performance Monitoring
+```typescript
+// Performance measurement
+const startTime = performance.now()
+// ... operation
+const endTime = performance.now()
+console.log(`Operation took ${endTime - startTime} milliseconds`)
+```
+
+### 8. Documentation Standards
+
+#### Code Documentation
+```typescript
+/**
+ * Adds a new account to the financial system
+ * @param novaConta - The account data without ID
+ * @throws {Error} When required fields are missing
+ */
+const addConta = (novaConta: Omit<Conta, "id">) => {
+  // Implementation
+}
+```
+
+#### Component Documentation
+```typescript
+/**
+ * ContaCard component displays individual account information
+ * with edit and delete functionality
+ */
+interface ContaCardProps {
+  /** The account data to display */
+  conta: Conta
+  /** Callback when edit button is clicked */
+  onEdit: (id: string) => void
+  /** Callback when delete button is clicked */
+  onDelete: (id: string) => void
+}
+```
+
+### 9. Git Workflow
+
+#### Branch Naming
+- `feature/feature-name` - New features
+- `fix/bug-description` - Bug fixes
+- `refactor/component-name` - Code refactoring
+- `docs/documentation-update` - Documentation changes
+
+#### Commit Messages
+```
+feat: add investment tracking feature
+fix: resolve payment toggle issue
+refactor: improve ContaCard component performance
+docs: update README with new features
+```
+
+#### Release Process
+1. Create release branch from main
+2. Update version in package.json
+3. Update CHANGELOG.md
+4. Create pull request
+5. Merge and tag release
+6. Deploy to production
+description:
+globs:
+alwaysApply: false
+---

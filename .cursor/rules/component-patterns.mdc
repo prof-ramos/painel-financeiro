@@ -1,0 +1,174 @@
+# React Component Patterns for Financial Dashboard
+
+## Component Structure
+
+### Page Components
+- Use the pattern from [app/page.tsx](mdc:app/page.tsx)
+- Import and use the `useFinancialData` hook
+- Implement navigation with `ViewType` states
+- Use conditional rendering for different views
+
+### UI Components
+- Follow shadcn/ui patterns from [components/ui/](mdc:components/ui/)
+- Use Tailwind CSS for styling
+- Implement proper TypeScript interfaces for props
+
+## shadcn/ui Usage
+
+### Button Patterns
+```typescript
+import { Button } from "@/components/ui/button"
+
+// Primary actions
+<Button onClick={handleAction}>Action Text</Button>
+
+// Secondary actions
+<Button variant="outline" onClick={handleAction}>Action Text</Button>
+
+// Destructive actions
+<Button variant="destructive" onClick={handleDelete}>Delete</Button>
+```
+
+### Card Patterns
+```typescript
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
+<Card>
+  <CardHeader>
+    <CardTitle>Title</CardTitle>
+  </CardHeader>
+  <CardContent>
+    {/* Content */}
+  </CardContent>
+</Card>
+```
+
+### Dialog/Modal Patterns
+```typescript
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+
+<Dialog>
+  <DialogTrigger asChild>
+    <Button>Open Dialog</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Dialog Title</DialogTitle>
+    </DialogHeader>
+    {/* Dialog content */}
+  </DialogContent>
+</Dialog>
+```
+
+## Financial Component Patterns
+
+### ContaCard Component
+- Follow the pattern in [components/ContaCard.tsx](mdc:components/ContaCard.tsx)
+- Use proper status indicators (ativo/suspenso)
+- Implement edit/delete functionality
+- Use Lucide icons for visual representation
+
+### Navigation Component
+- Follow the pattern in [components/Navigation.tsx](mdc:components/Navigation.tsx)
+- Use `ViewType` for navigation state
+- Implement proper tab switching
+- Use consistent icon mapping
+
+## Styling Guidelines
+
+### Tailwind CSS Classes
+- Use the color system defined in [tailwind.config.ts](mdc:tailwind.config.ts)
+- Follow the design tokens: `bg-background`, `text-foreground`, `border-border`
+- Use semantic colors: `text-primary`, `bg-destructive`, `border-muted`
+
+### Responsive Design
+```typescript
+// Mobile-first approach
+<div className="p-4 md:p-6 lg:p-8">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {/* Content */}
+  </div>
+</div>
+```
+
+### Dark Mode Support
+- Use CSS variables for colors (already configured)
+- Test both light and dark themes
+- Use `next-themes` for theme switching
+
+## Icon Usage
+
+### Lucide React Icons
+```typescript
+import { Home, Car, ShoppingCart, Smartphone, Heart, Calculator, CreditCard, DollarSign } from "lucide-react"
+
+// Use the icon mapping from [components/IconComponents.tsx](mdc:components/IconComponents.tsx)
+const iconMap = {
+  Home: Home,
+  Car: Car,
+  ShoppingCart: ShoppingCart,
+  // ... other icons
+}
+```
+
+## Form Patterns
+
+### React Hook Form Integration
+```typescript
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+
+const formSchema = z.object({
+  nome: z.string().min(1, "Nome é obrigatório"),
+  valor: z.string().min(1, "Valor é obrigatório"),
+  // ... other fields
+})
+
+const form = useForm<z.infer<typeof formSchema>>({
+  resolver: zodResolver(formSchema),
+})
+```
+
+## State Management in Components
+
+### Local State
+```typescript
+const [isOpen, setIsOpen] = useState(false)
+const [selectedView, setSelectedView] = useState<ViewType>("overview")
+```
+
+### Global State (Financial Data)
+```typescript
+const { contas, addConta, togglePagamento, financialSummary } = useFinancialData()
+```
+
+## Error Boundaries and Loading States
+
+### Loading States
+```typescript
+const [isLoading, setIsLoading] = useState(false)
+
+{isLoading ? (
+  <div className="flex items-center justify-center p-4">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+) : (
+  // Content
+)}
+```
+
+### Error Handling
+```typescript
+const [error, setError] = useState<string | null>(null)
+
+{error && (
+  <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-2 rounded">
+    {error}
+  </div>
+)}
+```
+description:
+globs:
+alwaysApply: false
+---
